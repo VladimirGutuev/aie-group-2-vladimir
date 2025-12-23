@@ -1,0 +1,23 @@
+{
+  "dataset_1": {
+    "algorithm": "KMeans",
+    "k": 2,
+    "criterion": "silhouette_score",
+    "reason": "Лучший silhouette среди всех k, DBSCAN не подошёл"
+  },
+  "dataset_2": {
+    "algorithm": "DBSCAN",
+    "eps": 0.6,
+    "k": null,
+    "min_samples": 5,
+    "criterion": "silhouette_score",
+    "reason": "Нелинейная структура данных, DBSCAN лучше справляется"
+  },
+  "dataset_3": {
+    "algorithm": "KMeans",
+    "k": 3,
+    "eps": null,
+    "criterion": "silhouette_score",
+    "reason": "KMeans стабильнее на кластерах разной плотности"
+  }
+}
