@@ -1,0 +1,18 @@
+{
+  "model_name": "HistGradientBoostingClassifier",
+  "best_params": {
+    "l2_regularization": 0.0,
+    "learning_rate": 0.1,
+    "max_depth": null,
+    "max_iter": 400,
+    "max_leaf_nodes": 63,
+    "min_samples_leaf": 20
+  },
+  "cv_roc_auc": 0.9753200517569166,
+  "test_metrics": {
+    "accuracy": 0.9466666666666667,
+    "f1": 0.9150743099787686,
+    "roc_auc": 0.9779950231070031
+  },
+  "model_file": "best_model.joblib"
+}
