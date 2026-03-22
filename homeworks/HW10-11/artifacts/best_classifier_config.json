@@ -1,0 +1,12 @@
+{
+  "experiment": "C4",
+  "name": "resnet18-finetune",
+  "dataset": "STL10",
+  "num_classes": 10,
+  "seed": 42,
+  "batch_size": 64,
+  "optimizer": "Adam",
+  "best_val_accuracy": 0.948,
+  "test_accuracy": 0.944875,
+  "trainable_params": 8398858
+}
