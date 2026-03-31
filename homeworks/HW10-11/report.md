@@ -28,8 +28,8 @@
 
 - Датасет: **OxfordIIITPet**
 - Трек: `segmentation`
-- Что считается ground truth: бинарная маска «питомец» (trimap == 1)
-- Какие предсказания использовались: DeepLabV3 argmax по классам `cat` (idx 8) и `dog` (idx 12) → бинарная маска
+- Foreground-класс (ground truth): `trimap == 1` — пиксели, принадлежащие питомцу (кошка или собака). Тримап OxfordIIITPet: 1 = foreground (pet), 2 = background, 3 = boundary (игнорируется).
+- Foreground-класс (prediction): пиксели, где argmax DeepLabV3 = `cat` (COCO-VOC idx 8) **или** `dog` (COCO-VOC idx 12). Все остальные классы считаются background.
 - Комментарий: OxfordIIITPet содержит ~3700 trainval-изображений кошек и собак с аннотациями тримапов. Бинарная постановка «питомец vs фон» разумна, т.к. pretrained DeepLabV3 на COCO-VOC знает оба класса (cat, dog), а ground truth тримапы содержат чёткую разметку foreground. Это позволяет корректно оценить качество сегментации через IoU.
 
 ## 4. Часть A: модели и обучение (C1-C4)
@@ -52,7 +52,7 @@
 ### Segmentation track
 
 - Модель: DeepLabV3_ResNet50 (COCO_WITH_VOC_LABELS_V1), только инференс
-- Что считается foreground: пиксели, где argmax модели = `cat` (8) или `dog` (12)
+- Foreground-класс: пиксели, где argmax модели = `cat` (COCO-VOC idx 8) или `dog` (COCO-VOC idx 12); GT foreground: `trimap == 1` (пиксели питомца)
 - V1: базовая постобработка — argmax → бинарная маска (cat|dog = 1, остальное = 0)
 - V2: альтернативная постобработка — то же + удаление связных компонент < 500 пикселей (`skimage.morphology.remove_small_objects`)
 - Как считался mean IoU: per-image binary IoU (intersection / union для pet vs background), затем среднее по 150 изображениям
