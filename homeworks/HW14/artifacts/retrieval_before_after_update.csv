@@ -1,0 +1,13 @@
+query,before_retrieved_sources,after_retrieved_sources,changed
+Какова температура на поверхности Солнца?,"doc_01, doc_02, doc_01, doc_03, doc_02","doc_01, doc_02, doc_01, doc_03, doc_02",False
+Почему на Венере такая высокая температура?,"doc_03, doc_10, doc_02, doc_01, doc_03","doc_03, doc_10, doc_02, doc_01, doc_03",False
+Какая самая высокая гора в Солнечной системе?,"doc_05, doc_05, doc_01, doc_09, doc_13","doc_05, doc_05, doc_01, doc_09, doc_13",False
+Сколько спутников у Юпитера?,"doc_06, doc_06, doc_06, doc_13, doc_09","doc_06, doc_06, doc_06, doc_13, doc_09",False
+Из чего состоят кольца Сатурна?,"doc_07, doc_07, doc_09, doc_13, doc_11","doc_07, doc_07, doc_09, doc_13, doc_11",False
+Почему Уран вращается на боку?,"doc_08, doc_08, doc_03, doc_08, doc_09","doc_08, doc_08, doc_03, doc_08, doc_09",False
+Когда человек впервые побывал на Луне?,"doc_10, doc_15, doc_10, doc_15, doc_10","doc_10, doc_15, doc_10, doc_15, doc_10",False
+Что находится между орбитами Марса и Юпитера?,"doc_11, doc_09, doc_13, doc_13, doc_14","doc_11, doc_09, doc_13, doc_13, doc_14",False
+Почему Плутон лишили статуса планеты?,"doc_13, doc_13, doc_09, doc_13, doc_12","doc_13, doc_13, doc_09, doc_13, doc_12",False
+Как учёные обнаруживают экзопланеты?,"doc_14, doc_14, doc_14, doc_14, doc_11","doc_14, doc_14, doc_14, doc_14, doc_18",True
+Какой марсоход собирает образцы грунта для доставки на Землю?,"doc_05, doc_05, doc_05, doc_05, doc_11","doc_16, doc_05, doc_05, doc_05, doc_16",True
+Какова цель программы Артемида?,"doc_14, doc_09, doc_14, doc_12, doc_14","doc_17, doc_17, doc_14, doc_17, doc_09",True
