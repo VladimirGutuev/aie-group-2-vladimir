@@ -151,10 +151,13 @@ python -m uvicorn src.service.app:app --host 0.0.0.0 --port 8000 --reload
 ### 4.3. Пример запроса
 
 ```powershell
+# Демо-кроп номера (ground truth виден в имени файла)
 curl.exe -X POST "http://localhost:8000/predict" `
   -H "accept: application/json" `
-  -F "file=@data/sample.jpg"
+  -F "file=@data/samples/crops/A001BP54.png"
 ```
+
+Демо-картинки лежат в `data/samples/` (кропы для CRNN и полные кадры для режима детектора).
 
 ### 4.4. Запуск в Docker
 
