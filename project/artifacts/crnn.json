@@ -1,0 +1,6 @@
+{
+  "alphabet": "0123456789ABCEHKMOPTXY",
+  "img_h": 32,
+  "img_w": 128,
+  "best_val_fsa": 0.9995
+}
