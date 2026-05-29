@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     port: int = 8000
 
     ocr_langs: str = Field(default="en,ru")
-    ocr_engine: str = "easyocr"  # "easyocr" or "crnn"
+    ocr_engine: str = "crnn"  # "crnn" (trained model) or "easyocr" (baseline)
     crnn_weights: str = "artifacts/crnn.pt"
     use_detector: bool = False
     detector_weights: str = "yolov8n.pt"

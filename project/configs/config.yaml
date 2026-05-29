@@ -3,7 +3,9 @@ service:
   port: 8000
 
 ocr:
-  langs: [en, ru]
+  engine: crnn          # "crnn" (trained) or "easyocr" (baseline)
+  crnn_weights: artifacts/crnn.pt
+  langs: [en, ru]       # used only when engine=easyocr
   min_confidence: 0.3
 
 detector:

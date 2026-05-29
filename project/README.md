@@ -34,10 +34,22 @@ project/
 ├── .dockerignore
 ├── src/                   # исходный код
 │   ├── config.py          # настройки через pydantic-settings
-│   ├── pipeline.py        # склейка detector + OCR
+│   ├── pipeline.py        # склейка detector + OCR (выбор движка)
+│   ├── postprocess.py     # нормализация номера + RU-постобработка
+│   ├── evaluate.py        # оценка EasyOCR (FSA/CER, ablation)
+│   ├── train_ocr.py       # обучение CRNN (CTC)
+│   ├── eval_crnn.py       # оценка CRNN на test
+│   ├── eval_nomeroff.py   # оценка Nomeroff (reference)
+│   ├── benchmark.py       # бенчмарк эффективности CRNN
+│   ├── benchmark_nomeroff.py
+│   ├── data/
+│   │   ├── nomeroff.py    # загрузчик OCR-датасета
+│   │   └── ocr_dataset.py # torch Dataset + кодек символов
 │   ├── models/
 │   │   ├── detector.py    # обёртка над YOLOv8 (stub + реальная загрузка)
-│   │   └── ocr.py         # обёртка над EasyOCR
+│   │   ├── ocr.py         # обёртка над EasyOCR (baseline)
+│   │   ├── crnn.py        # CRNN-модель (CNN+BiLSTM+CTC)
+│   │   └── crnn_ocr.py    # инференс-движок CRNN для сервиса
 │   └── service/
 │       ├── app.py         # FastAPI приложение
 │       └── schemas.py     # Pydantic схемы запросов/ответов
@@ -96,10 +108,13 @@ copy configs\.env.example .env
 |-------------------|--------------|--------------------------------------------------------|
 | `HOST`            | `0.0.0.0`    | Адрес сервиса                                         |
 | `PORT`            | `8000`       | Порт сервиса                                          |
-| `OCR_LANGS`       | `en,ru`      | Языки EasyOCR (через запятую)                         |
+| `OCR_ENGINE`      | `crnn`       | Движок OCR: `crnn` (обученная модель) или `easyocr`   |
+| `CRNN_WEIGHTS`    | `artifacts/crnn.pt` | Веса CRNN (`crnn.pt` точность, `crnn_tiny.pt` edge) |
+| `OCR_LANGS`       | `en,ru`      | Языки EasyOCR (только при `OCR_ENGINE=easyocr`)        |
 | `USE_DETECTOR`    | `false`      | Если `true`, перед OCR применяется YOLOv8-детектор    |
 | `DETECTOR_WEIGHTS`| `yolov8n.pt` | Путь до весов детектора                               |
-| `MIN_CONFIDENCE`  | `0.3`        | Порог уверенности для отбрасывания результатов        |
+| `MIN_CONFIDENCE`  | `0.3`        | Порог уверенности (EasyOCR)                            |
+| `USE_GPU`         | `false`      | Инференс на GPU                                        |
 
 ---
 
@@ -147,13 +162,46 @@ docker build -t smart-parking-anpr .
 docker run --rm -p 8000:8000 --env-file .env smart-parking-anpr
 ```
 
+### 4.5. Обучение и оценка моделей
+
+```powershell
+# Обучение CRNN (полная модель)
+python -m src.train_ocr --data-dir <dataset> --epochs 15 --batch-size 256 --gpu --out artifacts/crnn.pt
+
+# Лёгкий вариант для edge (1.95M параметров)
+python -m src.train_ocr --data-dir <dataset> --gpu --last-channels 256 --rnn-hidden 128 --rnn-layers 1 --out artifacts/crnn_tiny.pt
+
+# Оценка на test (FSA/CER)
+python -m src.eval_crnn --data-dir <dataset> --split test --weights artifacts/crnn.pt --gpu
+python -m src.evaluate  --data-dir <dataset> --split test --gpu        # EasyOCR baseline (ablation)
+
+# Бенчмарк эффективности
+python -m src.benchmark --weights artifacts/crnn.pt --gpu
+```
+
 ---
 
 ## 5. Данные
 
-- **CCPD (Chinese City Parking Dataset)** — для обучения и валидации YOLOv8-детектора (большой объём, лежит вне репозитория, инструкции в `data/README.md`).
-- **Nomeroff Net datasets** — для проверки распознавания, в том числе на номерах русского формата.
-- В репозитории хранятся только небольшие демо-картинки в `data/` для smoke-проверки сервиса. Большие датасеты не коммитятся.
+- **AUTO.RIA Numberplate OCR RU** (Nomeroff Net) — основной датасет: кропы РФ-номеров с разметкой
+  (train 49 382 / val 4 893 / test 2 845). Скачивается с https://nomeroff.net.ua/datasets/.
+- **CCPD (Chinese City Parking Dataset)** — для дообучения YOLOv8-детектора (дальнейшая работа).
+- В репозитории хранятся обученные веса (`artifacts/crnn.pt`, `crnn_tiny.pt`) и результаты оценки
+  (`artifacts/*.csv`); большие датасеты не коммитятся (инструкции в `data/README.md`).
+
+## 5a. Результаты
+
+Сравнение на едином test-сплите (2845 номеров), подробности — в [`report.md`](./report.md):
+
+| Модель | test FSA | Параметры | Размер |
+|---|---|---|---|
+| EasyOCR + постобработка (baseline) | 22.0% | — | — |
+| **CRNN-full (финальная)** | **99.54%** | 5.31M | 21 МБ |
+| CRNN-tiny (edge) | 98.66% | 1.95M | 7.8 МБ |
+| Nomeroff Net (reference) | 99.58% | 3.47M | ~14 МБ |
+
+Наша CRNN на уровне production-референса по точности; tiny-вариант превосходит его по компактности
+и single-image latency. Цель проекта (FSA > 85%) перекрыта.
 
 ---
 
