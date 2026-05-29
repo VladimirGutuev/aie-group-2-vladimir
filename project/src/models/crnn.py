@@ -11,20 +11,28 @@ class CRNN(nn.Module):
     Output: log-its (B, T, num_classes) where T = W / 4 timesteps.
     """
 
-    def __init__(self, num_classes: int, in_ch: int = 1) -> None:
+    def __init__(
+        self,
+        num_classes: int,
+        in_ch: int = 1,
+        last_channels: int = 512,
+        rnn_hidden: int = 256,
+        rnn_layers: int = 2,
+    ) -> None:
         super().__init__()
         self.cnn = nn.Sequential(
             nn.Conv2d(in_ch, 64, 3, 1, 1), nn.ReLU(inplace=True), nn.MaxPool2d(2, 2),
             nn.Conv2d(64, 128, 3, 1, 1), nn.ReLU(inplace=True), nn.MaxPool2d(2, 2),
             nn.Conv2d(128, 256, 3, 1, 1), nn.BatchNorm2d(256), nn.ReLU(inplace=True),
             nn.Conv2d(256, 256, 3, 1, 1), nn.ReLU(inplace=True), nn.MaxPool2d((2, 1), (2, 1)),
-            nn.Conv2d(256, 512, 3, 1, 1), nn.BatchNorm2d(512), nn.ReLU(inplace=True),
-            nn.MaxPool2d((2, 1), (2, 1)),
+            nn.Conv2d(256, last_channels, 3, 1, 1), nn.BatchNorm2d(last_channels),
+            nn.ReLU(inplace=True), nn.MaxPool2d((2, 1), (2, 1)),
         )
         self.pool = nn.AdaptiveAvgPool2d((1, None))
-        self.rnn = nn.LSTM(512, 256, num_layers=2, bidirectional=True,
-                           batch_first=True, dropout=0.2)
-        self.fc = nn.Linear(512, num_classes)
+        self.rnn = nn.LSTM(last_channels, rnn_hidden, num_layers=rnn_layers,
+                           bidirectional=True, batch_first=True,
+                           dropout=0.2 if rnn_layers > 1 else 0.0)
+        self.fc = nn.Linear(rnn_hidden * 2, num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         f = self.cnn(x)            # (B, 512, H', W')

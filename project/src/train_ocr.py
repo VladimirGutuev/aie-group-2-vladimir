@@ -57,9 +57,15 @@ def main() -> None:
     parser.add_argument("--img-h", type=int, default=32)
     parser.add_argument("--img-w", type=int, default=128)
     parser.add_argument("--limit-train", type=int, default=None)
+    parser.add_argument("--last-channels", type=int, default=512)
+    parser.add_argument("--rnn-hidden", type=int, default=256)
+    parser.add_argument("--rnn-layers", type=int, default=2)
     parser.add_argument("--gpu", action="store_true")
     parser.add_argument("--out", default="artifacts/crnn.pt")
     args = parser.parse_args()
+
+    arch = {"last_channels": args.last_channels, "rnn_hidden": args.rnn_hidden,
+            "rnn_layers": args.rnn_layers}
 
     device = torch.device("cuda" if args.gpu and torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
@@ -79,7 +85,8 @@ def main() -> None:
     val_dl = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
                         num_workers=4, collate_fn=collate)
 
-    model = CRNN(codec.num_classes).to(device)
+    model = CRNN(codec.num_classes, **arch).to(device)
+    print(f"params: {sum(p.numel() for p in model.parameters())/1e6:.2f}M  arch={arch}")
     criterion = nn.CTCLoss(blank=codec.blank, zero_infinity=True)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
@@ -114,10 +121,10 @@ def main() -> None:
         if fsa > best_fsa:
             best_fsa = fsa
             torch.save({"model": model.state_dict(), "alphabet": alphabet,
-                        "img_h": args.img_h, "img_w": args.img_w}, out_path)
+                        "img_h": args.img_h, "img_w": args.img_w, "arch": arch}, out_path)
             with open(out_path.with_suffix(".json"), "w", encoding="utf-8") as f:
                 json.dump({"alphabet": alphabet, "img_h": args.img_h,
-                           "img_w": args.img_w, "best_val_fsa": best_fsa}, f,
+                           "img_w": args.img_w, "arch": arch, "best_val_fsa": best_fsa}, f,
                           ensure_ascii=False, indent=2)
             print(f"  saved best (val_FSA={best_fsa:.4f}) -> {out_path}")
 

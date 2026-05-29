@@ -46,7 +46,7 @@ def main() -> None:
     device = torch.device("cuda" if args.gpu and torch.cuda.is_available() else "cpu")
     ckpt = torch.load(args.weights, map_location=device)
     codec = CharCodec(ckpt["alphabet"])
-    model = CRNN(codec.num_classes).to(device)
+    model = CRNN(codec.num_classes, **ckpt.get("arch", {})).to(device)
     model.load_state_dict(ckpt["model"])
     model.eval()
 

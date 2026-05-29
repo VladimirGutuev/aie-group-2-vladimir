@@ -68,7 +68,7 @@ def main() -> None:
     ckpt = torch.load(args.weights, map_location="cpu")
     codec = CharCodec(ckpt["alphabet"])
     img_h, img_w = ckpt.get("img_h", 32), ckpt.get("img_w", 128)
-    model = CRNN(codec.num_classes)
+    model = CRNN(codec.num_classes, **ckpt.get("arch", {}))
     model.load_state_dict(ckpt["model"])
 
     n_params = sum(p.numel() for p in model.parameters())

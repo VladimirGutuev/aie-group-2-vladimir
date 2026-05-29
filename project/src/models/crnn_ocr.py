@@ -41,7 +41,7 @@ class CrnnOCR:
         self._codec = CharCodec(ckpt["alphabet"])
         self._img_h = ckpt.get("img_h", 32)
         self._img_w = ckpt.get("img_w", 128)
-        self._model = CRNN(self._codec.num_classes).to(self._device)
+        self._model = CRNN(self._codec.num_classes, **ckpt.get("arch", {})).to(self._device)
         self._model.load_state_dict(ckpt["model"])
         self._model.eval()
 
