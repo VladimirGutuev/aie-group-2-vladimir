@@ -31,6 +31,7 @@ class AnprPipeline:
         self.ocr = ocr or PlateOCR(
             langs=settings.ocr_lang_list,
             min_confidence=settings.min_confidence,
+            gpu=settings.use_gpu,
         )
 
     def run(self, image: np.ndarray) -> list[PlateRead]:

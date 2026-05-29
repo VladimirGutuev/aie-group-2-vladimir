@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     use_detector: bool = False
     detector_weights: str = "yolov8n.pt"
     min_confidence: float = 0.3
+    use_gpu: bool = False
 
     @property
     def ocr_lang_list(self) -> list[str]:
