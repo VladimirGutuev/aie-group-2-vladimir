@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     ocr_engine: str = "crnn"  # "crnn" (trained model) or "easyocr" (baseline)
     crnn_weights: str = "artifacts/crnn.pt"
     use_detector: bool = False
-    detector_weights: str = "yolov8n.pt"
+    detector_weights: str = "artifacts/detector/plate_yolov8n.pt"
     min_confidence: float = 0.3
     use_gpu: bool = False
 

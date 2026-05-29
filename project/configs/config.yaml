@@ -9,8 +9,8 @@ ocr:
   min_confidence: 0.3
 
 detector:
-  enabled: false
-  weights: yolov8n.pt
+  enabled: false                          # true для полного кадра, false для кропа
+  weights: artifacts/detector/plate_yolov8n.pt
   imgsz: 640
   conf_threshold: 0.25
 

@@ -38,13 +38,15 @@ project/
 │   ├── postprocess.py     # нормализация номера + RU-постобработка
 │   ├── evaluate.py        # оценка EasyOCR (FSA/CER, ablation)
 │   ├── train_ocr.py       # обучение CRNN (CTC)
+│   ├── train_detector.py  # обучение YOLOv8-детектора
 │   ├── eval_crnn.py       # оценка CRNN на test
 │   ├── eval_nomeroff.py   # оценка Nomeroff (reference)
 │   ├── benchmark.py       # бенчмарк эффективности CRNN
 │   ├── benchmark_nomeroff.py
 │   ├── data/
 │   │   ├── nomeroff.py    # загрузчик OCR-датасета
-│   │   └── ocr_dataset.py # torch Dataset + кодек символов
+│   │   ├── ocr_dataset.py # torch Dataset + кодек символов
+│   │   └── prepare_detector.py  # HF-датасет → YOLO-формат
 │   ├── models/
 │   │   ├── detector.py    # обёртка над YOLOv8 (stub + реальная загрузка)
 │   │   ├── ocr.py         # обёртка над EasyOCR (baseline)
@@ -179,15 +181,30 @@ python -m src.evaluate  --data-dir <dataset> --split test --gpu        # EasyOCR
 python -m src.benchmark --weights artifacts/crnn.pt --gpu
 ```
 
+### 4.6. Детектор номера (полный кадр)
+
+```powershell
+# Подготовка датасета детекции в YOLO-формат (нужен отдельный env с datasets, см. report §7)
+python -m src.data.prepare_detector --out <path>/plates_yolo
+
+# Обучение YOLOv8n (test mAP@50 = 0.99)
+python -m src.train_detector --data <path>/plates_yolo/data.yaml --epochs 40 --device 0
+```
+
+Чтобы `/predict` работал на **полном кадре** (а не на кропе номера), включите детектор:
+`OCR_ENGINE=crnn`, `USE_DETECTOR=true` — тогда пайплайн сам находит номер и читает его.
+
 ---
 
 ## 5. Данные
 
 - **AUTO.RIA Numberplate OCR RU** (Nomeroff Net) — основной датасет: кропы РФ-номеров с разметкой
   (train 49 382 / val 4 893 / test 2 845). Скачивается с https://nomeroff.net.ua/datasets/.
-- **CCPD (Chinese City Parking Dataset)** — для дообучения YOLOv8-детектора (дальнейшая работа).
-- В репозитории хранятся обученные веса (`artifacts/crnn.pt`, `crnn_tiny.pt`) и результаты оценки
-  (`artifacts/*.csv`); большие датасеты не коммитятся (инструкции в `data/README.md`).
+- **keremberke/license-plate-object-detection** (HuggingFace) — для обучения YOLOv8-детектора
+  (~8.8k размеченных кадров → YOLO-формат train 6176 / val 1765 / test 882).
+- В репозитории хранятся обученные веса (`artifacts/crnn.pt`, `crnn_tiny.pt`,
+  `artifacts/detector/plate_yolov8n.pt`) и результаты оценки (`artifacts/*.csv`); большие
+  датасеты не коммитятся (инструкции в `data/README.md`).
 
 ## 5a. Результаты
 

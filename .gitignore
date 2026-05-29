@@ -51,6 +51,9 @@ logs/
 .env.*
 !.env.example
 
+# Ultralytics YOLO training runs (мусор обучения; финальные веса копируются в artifacts/)
+project/runs/
+
 # Разное
 *.tmp
 *.bak
