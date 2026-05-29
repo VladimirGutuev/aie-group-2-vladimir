@@ -30,7 +30,7 @@ def convert(out_dir: Path, dataset_name: str, config: str) -> None:
 
     for hf_split, yolo_split in HF_SPLIT_TO_YOLO.items():
         try:
-            ds = load_dataset(dataset_name, config, split=hf_split)
+            ds = load_dataset(dataset_name, config, split=hf_split, trust_remote_code=True)
         except (ValueError, KeyError):
             print(f"  split '{hf_split}' not found, skipping")
             continue
