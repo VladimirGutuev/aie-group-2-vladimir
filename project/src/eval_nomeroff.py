@@ -42,6 +42,21 @@ def build_detector():
 
     from nomeroff_net.pipes.number_plate_text_readers.text_detector import TextDetector
 
+    # In nomeroff-net 4.0.1 the high-level TextDetector.predict hands raw zone
+    # arrays to the low-level OCR.predict, which expects an already-preprocessed
+    # tensor (its own preprocess() is never called). Patch it to preprocess when
+    # given a non-tensor input.
+    from nomeroff_net.pipes.number_plate_text_readers.base.ocr import OCR
+
+    _orig_predict = OCR.predict
+
+    def _patched_predict(self, xs, return_acc=False):
+        if not isinstance(xs, torch.Tensor):
+            xs = self.preprocess(xs)
+        return _orig_predict(self, xs, return_acc)
+
+    OCR.predict = _patched_predict
+
     return TextDetector({"ru": {"for_regions": ["ru"], "model_path": "latest"}})
 
 
