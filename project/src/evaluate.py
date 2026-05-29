@@ -31,9 +31,11 @@ for _stream in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
+from collections.abc import Callable
+
 from .data.nomeroff import Sample, load_samples
 from .models.ocr import RU_ALLOWLIST, PlateOCR
-from .postprocess import normalize_plate
+from .postprocess import correct_ru_plate, normalize_plate
 
 
 def levenshtein(a: str, b: str) -> int:
@@ -57,21 +59,21 @@ def load_image(path: Path) -> np.ndarray:
     return np.array(Image.open(path).convert("RGB"))
 
 
-def best_text(reader: PlateOCR, image: np.ndarray) -> str:
+def best_text(reader: PlateOCR, image: np.ndarray, postproc: Callable[[str], str]) -> str:
     results = reader.read(image)
     if not results:
         return ""
     best = max(results, key=lambda r: r.confidence)
-    return normalize_plate(best.text)
+    return postproc(normalize_plate(best.text))
 
 
-def evaluate(reader: PlateOCR, samples: list[Sample]) -> dict:
+def evaluate(reader: PlateOCR, samples: list[Sample], postproc: Callable[[str], str]) -> dict:
     exact = 0
     total_cer = 0.0
     rows = []
     for s in samples:
         gt = normalize_plate(s.text)
-        pred = best_text(reader, load_image(s.image_path))
+        pred = best_text(reader, load_image(s.image_path), postproc)
         is_exact = pred == gt
         cer = levenshtein(pred, gt) / max(len(gt), 1)
         exact += int(is_exact)
@@ -101,16 +103,19 @@ def main() -> None:
     samples = load_samples(args.data_dir, split=args.split, limit=args.limit)
     print(f"Loaded {len(samples)} samples from split='{args.split}'")
 
+    identity = lambda t: t  # noqa: E731
+    improved_reader = PlateOCR(langs=langs, gpu=args.gpu, preprocess=True, allowlist=RU_ALLOWLIST)
     configs = {
-        "baseline": PlateOCR(langs=langs, gpu=args.gpu),
-        "improved": PlateOCR(langs=langs, gpu=args.gpu, preprocess=True, allowlist=RU_ALLOWLIST),
+        "baseline": (PlateOCR(langs=langs, gpu=args.gpu), identity),
+        "preprocess+allowlist": (improved_reader, identity),
+        "+ru_postprocess": (improved_reader, correct_ru_plate),
     }
 
     summary = []
     detailed: dict[str, list[dict]] = {}
-    for name, reader in configs.items():
+    for name, (reader, postproc) in configs.items():
         t0 = time.time()
-        res = evaluate(reader, samples)
+        res = evaluate(reader, samples, postproc)
         dt = time.time() - t0
         per_img = dt / max(res["n"], 1)
         print(f"[{name:8s}] FSA={res['fsa']:.3f}  CER={res['cer']:.3f}  "
