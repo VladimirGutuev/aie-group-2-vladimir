@@ -1,0 +1,11 @@
+{
+  "alphabet": "0123456789ABCEHKMOPTXY",
+  "img_h": 32,
+  "img_w": 128,
+  "arch": {
+    "last_channels": 256,
+    "rnn_hidden": 128,
+    "rnn_layers": 1
+  },
+  "best_val_fsa": 0.991
+}
