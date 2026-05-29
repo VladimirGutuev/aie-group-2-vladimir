@@ -66,7 +66,8 @@ def main() -> None:
     for start in range(0, len(samples), args.batch_size):
         batch = samples[start:start + args.batch_size]
         imgs = [cv2.cvtColor(cv2.imread(str(s.image_path)), cv2.COLOR_BGR2RGB) for s in batch]
-        preds = detector.predict(imgs)
+        # tell the reader these are single-line Russian plates
+        preds = detector.predict(imgs, ["ru"] * len(imgs), [1] * len(imgs))
         for s, pred in zip(batch, preds):
             gt = normalize_plate(s.text)
             pred = normalize_plate(pred if isinstance(pred, str) else str(pred))
