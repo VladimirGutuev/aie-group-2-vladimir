@@ -16,23 +16,32 @@ class PlateRead:
     confidence: float
 
 
+def _build_ocr():
+    """Construct the OCR engine selected in settings (easyocr | crnn)."""
+    if settings.ocr_engine == "crnn":
+        from .models.crnn_ocr import CrnnOCR
+
+        return CrnnOCR(weights=settings.crnn_weights, gpu=settings.use_gpu)
+    return PlateOCR(
+        langs=settings.ocr_lang_list,
+        min_confidence=settings.min_confidence,
+        gpu=settings.use_gpu,
+    )
+
+
 class AnprPipeline:
     """Two-stage license plate recognition pipeline: detector -> OCR."""
 
     def __init__(
         self,
         detector: PlateDetector | None = None,
-        ocr: PlateOCR | None = None,
+        ocr=None,
     ) -> None:
         self.detector = detector or PlateDetector(
             weights=settings.detector_weights,
             enabled=settings.use_detector,
         )
-        self.ocr = ocr or PlateOCR(
-            langs=settings.ocr_lang_list,
-            min_confidence=settings.min_confidence,
-            gpu=settings.use_gpu,
-        )
+        self.ocr = ocr or _build_ocr()
 
     def run(self, image: np.ndarray) -> list[PlateRead]:
         detections: list[Detection] = self.detector.detect(image)
