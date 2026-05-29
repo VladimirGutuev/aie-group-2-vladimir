@@ -16,11 +16,20 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 import time
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+
+# EasyOCR prints a download progress bar using block glyphs; on Windows a
+# redirected stdout defaults to cp1251 and chokes on them. Force UTF-8.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
 from .data.nomeroff import Sample, load_samples
 from .models.ocr import RU_ALLOWLIST, PlateOCR
