@@ -27,6 +27,19 @@ from .postprocess import normalize_plate
 
 
 def build_detector():
+    # nomeroff-net 4.0.1 predates PyTorch 2.6's weights_only=True default and
+    # ships checkpoints with custom globals. We trust the official weights, so
+    # force the legacy load behaviour before importing their code.
+    import torch
+
+    _orig_load = torch.load
+
+    def _patched_load(*args, **kwargs):
+        kwargs.setdefault("weights_only", False)
+        return _orig_load(*args, **kwargs)
+
+    torch.load = _patched_load
+
     from nomeroff_net.pipes.number_plate_text_readers.text_detector import TextDetector
 
     return TextDetector({"ru": {"for_regions": ["ru"], "model_path": "latest"}})
